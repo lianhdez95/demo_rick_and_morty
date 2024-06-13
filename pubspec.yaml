@@ -34,14 +34,21 @@ dependencies:
   flex_color_scheme: ^7.3.1
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
   flutter_riverpod: ^2.5.1
   go_router: ^14.1.4
   google_fonts: ^6.2.1
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_lints: ^3.0.0
   flutter_test:
     sdk: flutter
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/rick_and_morty1.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
