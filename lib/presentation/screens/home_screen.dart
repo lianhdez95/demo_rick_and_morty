@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/utils/chack_connection.dart';
 import '../../data/models/character_response_model.dart';
 import '../providers/character_providers.dart';
+import '../widgets/character_search_delegate.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -144,8 +145,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: TextStyle(color: colors.primary)),
                   actions: [
                     IconButton(
-                      onPressed: () {
-                        //implementar búsqueda por nombre
+                      onPressed: () async {
+                        final characterRepository = ref.read(remoteCharacterRepositoryProvider);
+                        final selectedCharacter = await showSearch(
+                          context: context,
+                          delegate: CharacterSearchDelegate(characterRepository),
+                        );
+
+                        if (selectedCharacter != null) {
+                          // Navega a la pantalla de detalles del personaje seleccionado
+                          context.push('/character/${selectedCharacter.id}');
+                        }
                       },
                       icon: Icon(
                         Icons.search,

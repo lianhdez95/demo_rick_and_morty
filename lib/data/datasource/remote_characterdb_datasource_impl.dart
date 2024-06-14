@@ -26,4 +26,13 @@ class CharacterDataSourceImpl implements CharacterDataSource {
       throw Exception('Failed to load character');
     }
   }
+
+  @override
+  Future<List<Character>> filterCharactersByName(String name) {
+    return dio
+        .get('/character', queryParameters: {'name': name})
+        .then((value) => (value.data['results'] as List)
+            .map((e) => Character.fromJson(e))
+            .toList());
+  }
 }

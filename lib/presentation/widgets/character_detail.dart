@@ -15,6 +15,7 @@ class CharacterDetail extends StatelessWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
 
     final double height = MediaQuery.of(context).size.height;
+    final double width = MediaQuery.of(context).size.width;
 
     return Padding(
       padding: const EdgeInsets.all(15.0),
@@ -89,6 +90,7 @@ class CharacterDetail extends StatelessWidget {
                       Text(
                         parseStatus(character.status!),
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                         style:
                             TextStyle(fontSize: textTheme.titleLarge!.fontSize),
                       ),
@@ -149,12 +151,15 @@ class CharacterDetail extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: colors.primary),
                       ),
-                      Text(
-                        parseLocation(character.origin!),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style:
-                            TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                      SizedBox(
+                        width: width*0.6,
+                        child: Text(
+                          parseLocation(character.origin!),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          style:
+                              TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                        ),
                       ),
                     ],
                   ),
@@ -171,12 +176,15 @@ class CharacterDetail extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: colors.primary),
                       ),
-                      Text(
-                        parseLocation(character.location!),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style:
-                            TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                      SizedBox(
+                        width: width*0.55,
+                        child: Text(
+                          parseLocation(character.location!),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          style:
+                              TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                        ),
                       ),
                     ],
                   ),

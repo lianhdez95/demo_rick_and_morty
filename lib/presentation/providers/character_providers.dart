@@ -36,6 +36,19 @@ final localCharacterDatasourceProvider =
   );
 });
 
+//filtrar personajes por nombre
+final characterSearchProvider = FutureProvider.autoDispose
+    .family<List<Character>, String>((ref, name) async {
+  final characterRepo = ref.watch(remoteCharacterRepositoryProvider);
+  try {
+    return await characterRepo
+        .filterCharactersByName(name)
+        .timeout(const Duration(seconds: 30));
+  } on TimeoutException catch (_) {
+    throw Exception('La carga de datos excedió el tiempo límite');
+  }
+});
+
 //un solo personaje
 final characterDetailProvider = FutureProvider.autoDispose
     .family<Character, String>((ref, characterId) async {
