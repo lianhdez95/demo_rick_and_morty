@@ -3,7 +3,9 @@ import 'package:demo_rick_and_morty/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() => runApp(const ProviderScope(child: MyApp()));
+void main() {
+  runApp(const ProviderScope(child: MyApp()));
+}
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -14,7 +16,7 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: 'Demo Rick & Morty',
       routerConfig: appRouter,
-      theme: lightMode,
+      theme: lightMode, 
       darkTheme: darkMode,
       themeMode: ThemeMode.light,
     );
