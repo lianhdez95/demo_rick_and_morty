@@ -2,12 +2,15 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:demo_rick_and_morty/core/utils/parsers.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/character_list_tile.dart';
+import 'package:demo_rick_and_morty/presentation/widgets/error_screen.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/utils/chack_connection.dart';
 import '../../data/models/character_response_model.dart';
 import '../providers/character_providers.dart';
+import '../widgets/character_search_delegate.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -36,7 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future loadNextPage() async {
-    if (isLoading) return;
+    if (isLoading || !(await isConnected())) return;
     isLoading = true;
     setState(() {});
     try {
@@ -49,12 +52,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       isLoading = false;
     } catch (e) {
       _scrollController.animateTo(0,
-          duration: Duration(seconds: 1), curve: Curves.easeOut);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al obtener la siguiente página: $e'),
-        ),
-      );
+          duration: const Duration(seconds: 1), curve: Curves.easeOut);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No hay conexión a internet'),
+          ),
+        );
+      }
     }
   }
 
@@ -78,14 +83,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _refreshData() async {
-    try {
-      await ref.read(characterListProvider.notifier).resetAndLoadInitialData();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al recargar datos: $e'),
-        ),
-      );
+    if (await isConnected()) {
+      try {
+        await ref
+            .read(characterListProvider.notifier)
+            .resetAndLoadInitialData();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No hay conexión a internet'),
+            ),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No hay conexión a internet'),
+          ),
+        );
+      }
     }
   }
 
@@ -102,41 +121,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         future: _initialLoadFuture,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.wifi_off,
-                      size: height * 0.1,
-                      color: colors.error,
-                    ),
-                    Text(
-                        'Error al obtener datos\nRevise su conexión a internet',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: colors.error,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                    SizedBox(
-                      height: height * 0.02,
-                    ),
-                    FilledButton(
-                        onPressed: () => context.go('/'),
-                        style: ButtonStyle(
-                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10))),
-                        ),
-                        child: Text('Reintentar',
-                            style: TextStyle(
-                                color: colors.onPrimary,
-                                fontSize: textTheme.bodyMedium!.fontSize,
-                                fontWeight: FontWeight.bold))),
-                  ],
-                ),
-              ),
-            );
+            return const ErrorScreen(
+                text: 'Error al obtener datos\nRevise su conexión a internet',
+                redirectRoute: '/',
+                buttonText: 'Reintentar',
+                iconData: Icons.wifi_off);
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -152,21 +141,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           } else {
             return Scaffold(
               appBar: AppBar(
-                title: Text('Rick & Morty Characters',
-                    style: TextStyle(color: colors.primary)),
-                actions: [
-                  IconButton(
-                    onPressed: () {
-                      //implementar búsqueda por nombre
-                      
-                    },
-                    icon: Icon(
-                      Icons.search,
-                      color: colors.primary,
+                  title: Text('Rick & Morty Characters',
+                      style: TextStyle(color: colors.primary)),
+                  actions: [
+                    IconButton(
+                      onPressed: () async {
+                        final characterRepository = ref.read(remoteCharacterRepositoryProvider);
+                        final selectedCharacter = await showSearch(
+                          context: context,
+                          delegate: CharacterSearchDelegate(characterRepository),
+                        );
+
+                        if (selectedCharacter != null) {
+                          // Navega a la pantalla de detalles del personaje seleccionado
+                          context.push('/character/${selectedCharacter.id}');
+                        }
+                      },
+                      icon: Icon(
+                        Icons.search,
+                        color: colors.primary,
+                      ),
                     ),
-                  ),
-                ]
-              ),
+                  ]),
               body: NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification.metrics.pixels > 0) {
@@ -193,7 +189,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         itemCount: characters.length,
                         itemBuilder: (context, index) {
                           return FadeInUp(
-                            duration: Duration(milliseconds: 100),
+                            duration: const Duration(milliseconds: 100),
                             child: CharacterListTile(
                               imageUrl: characters[index].image,
                               name: characters[index].name,

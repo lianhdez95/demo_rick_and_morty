@@ -16,4 +16,9 @@ class CharacterRepositoryImpl implements CharacterRepository {
   Future<Character> getCharacter(int id) async {
     return await dataSource.getCharacter(id);
   }
+
+  @override
+  Future<List<Character>> filterCharactersByName(String name) {
+    return dataSource.filterCharactersByName(name);
+  }
 }

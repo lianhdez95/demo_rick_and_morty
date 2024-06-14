@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models/character_response_model.dart';
@@ -29,23 +30,11 @@ class CharacterListTile extends StatelessWidget {
       leading: CircleAvatar(
         radius: width * 0.07,
         child: ClipOval(
-          child: imageUrl != null
-              ? Image.network(
-                  imageUrl!,
-                  fit: BoxFit.cover,
-                  width: 2 * width * 0.07,
-                  height: 2 * width * 0.07,
-                  errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                    // Si ocurre un error al cargar la imagen, retorna una imagen de error
-                    return const Icon(Icons.broken_image);
-                  },
-                )
-              : Icon(
-                  Icons.person,
-                  color: colors.primary,
-                ),
-        ),
+            child: CachedNetworkImage(
+          imageUrl: imageUrl!,
+          placeholder: (context, url) => CircularProgressIndicator(),
+          errorWidget: (context, url, error) => Icon(Icons.error),
+        )),
       ),
       title: Text(
         name ?? 'Unknown',
