@@ -1,5 +1,6 @@
 import 'package:demo_rick_and_morty/core/utils/parsers.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/character_list_tile.dart';
+import 'package:demo_rick_and_morty/presentation/widgets/error_screen.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -37,17 +38,41 @@ class CharacterSearchDelegate extends SearchDelegate<Character> {
 
   @override
   Widget buildResults(BuildContext context) {
+    
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    final Brightness brightness = Theme.of(context).brightness;
+    
+    final double height = MediaQuery.of(context).size.height;
+    final double width = MediaQuery.of(context).size.width;
+
     if (query.isEmpty) {
       return Container();
     }
+
+
 
     return FutureBuilder<List<Character>>(
       future: characterRepository.filterCharactersByName(query),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Loading(sizePercent: 30,));
+          return const Center(
+              child: Loading(
+            sizePercent: 30,
+          ));
         } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.wifi_off, color: colors.error, size: height*0.1),
+                SizedBox(height: height*0.01,),
+                Text('Error de conexión', style: textTheme.bodyLarge,),
+                SizedBox(height: height*0.01,),
+                FilledButton(onPressed: (){context.pop();}, child: Text('Regresar'))
+              ],
+            ),
+          );
         } else {
           final characters = snapshot.data;
           return ListView.builder(
