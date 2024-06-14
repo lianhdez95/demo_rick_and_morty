@@ -13,10 +13,8 @@ class CharacterDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final TextTheme textTheme = Theme.of(context).textTheme;
-    final Brightness brightness = Theme.of(context).brightness;
 
     final double height = MediaQuery.of(context).size.height;
-    final double width = MediaQuery.of(context).size.width;
 
     return Padding(
       padding: const EdgeInsets.all(15.0),
@@ -33,7 +31,7 @@ class CharacterDetail extends StatelessWidget {
                       color: colors.primary.withOpacity(0.5),
                       spreadRadius: 1,
                       blurRadius: 5,
-                      offset: Offset(2, 5), // changes position of shadow
+                      offset: const Offset(2, 5), // changes position of shadow
                     ),
                   ],
                 ),
@@ -44,17 +42,17 @@ class CharacterDetail extends StatelessWidget {
                           character.image!,
                       placeholder: (context, url) =>
                           const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) => Icon(Icons.error),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
                     ))),
           ),
           SizedBox(
             height: height * 0.02,
           ),
           SlideInRight(
-            delay: Duration(milliseconds: 200),
+            delay: const Duration(milliseconds: 200),
             child: Card(
                 child: Padding(
-              padding: EdgeInsets.all(15.0),
+              padding: const EdgeInsets.all(15.0),
               child: Column(
                 children: [
                   Row(
