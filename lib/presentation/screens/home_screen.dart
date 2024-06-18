@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/utils/chack_connection.dart';
-import '../../data/models/character_response_model.dart';
+import '../../domain/models/character_response_model.dart';
 import '../providers/character_providers.dart';
 import '../widgets/character_search_delegate.dart';
 

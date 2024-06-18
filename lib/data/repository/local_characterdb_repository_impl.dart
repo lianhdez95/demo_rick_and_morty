@@ -1,5 +1,5 @@
 
-import 'package:demo_rick_and_morty/data/models/character_response_model.dart';
+import 'package:demo_rick_and_morty/domain/models/character_response_model.dart';
 import 'package:demo_rick_and_morty/domain/repository/local_character_repository.dart';
 
 import '../../domain/datasource/local_character_datasource.dart';

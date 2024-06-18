@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/datasource/local_characterdb_datasource_impl.dart';
 import '../../data/datasource/remote_characterdb_datasource_impl.dart';
-import '../../data/models/character_response_model.dart';
+import '../../domain/models/character_response_model.dart';
 import '../../data/repository/local_characterdb_repository_impl.dart';
 import '../../data/repository/remote_character_repository_impl.dart';
 import '../../domain/datasource/local_character_datasource.dart';

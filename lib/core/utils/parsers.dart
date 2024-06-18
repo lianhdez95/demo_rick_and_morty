@@ -1,6 +1,6 @@
 
 
-import 'package:demo_rick_and_morty/data/models/character_response_model.dart';
+import 'package:demo_rick_and_morty/domain/models/character_response_model.dart';
 
 String parseGender(Gender gender) {
   switch (gender) {
