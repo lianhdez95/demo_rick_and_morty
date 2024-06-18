@@ -36,8 +36,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
       loadNextPage();
     }
   }
@@ -49,7 +49,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       isPageLoading = true;
     });
     try {
-      await Future.delayed(const Duration(seconds: 2));
       await ref.read(characterListProvider.notifier).getNextPage();
       _scrollController.animateTo(
         _scrollController.offset + 100,
