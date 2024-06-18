@@ -1,4 +1,6 @@
 // ignore_for_file: unused_local_variable
+import 'dart:developer';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:demo_rick_and_morty/core/utils/parsers.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/character_list_tile.dart';
@@ -71,8 +73,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadInitialData() async {
     try {
+      isLoading = true;
+      setState(() {});
+      log(isLoading.toString());
       _initialLoadFuture =
           ref.read(characterListProvider.notifier).loadInitialData();
+      isLoading = false;
+      setState(() {});
+      log(isLoading.toString());
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

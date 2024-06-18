@@ -40,4 +40,21 @@ class LocalCharacterdbDatasourceImpl implements LocalCharacterDatasource{
     storedData[page.toString()] = characters.map((i) => i.toJson()).toList();
     prefs.setString('characters', jsonEncode(storedData));
   }
+  
+  @override
+  Future<List<Character>> loadAllCharacters() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<Character> allCharacters = [];
+
+    if (prefs.containsKey('characters')) {
+      Map<String, dynamic> loadedData = jsonDecode(prefs.getString('characters')!);
+      loadedData.forEach((page, charactersData) {
+        List<Character> loadedCharacters = (charactersData as List)
+            .map((i) => Character.fromJson(i)).toList();
+        allCharacters.addAll(loadedCharacters);
+      });
+    }
+
+    return allCharacters;
+  }
 }

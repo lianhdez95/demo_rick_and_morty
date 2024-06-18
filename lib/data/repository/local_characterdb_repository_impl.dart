@@ -11,4 +11,9 @@ class LocalCharacterdbRepositoryImpl implements LocalCharacterRepository{
   Future<List<Character>> searchCharacters(String query, int page) {
     return localCharacterDatasource.searchCharacters(query, page);
   }
+  
+  @override
+  Future<List<Character>> getAllCharacters(){
+    return localCharacterDatasource.loadAllCharacters();
+  }
 }
