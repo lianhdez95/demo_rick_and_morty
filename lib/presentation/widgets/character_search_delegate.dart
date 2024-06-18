@@ -5,7 +5,7 @@ import 'package:demo_rick_and_morty/presentation/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/models/character_response_model.dart';
+import '../../domain/models/character_response_model.dart';
 import '../../domain/repository/remote_character_repository.dart';
 
 class CharacterSearchDelegate extends SearchDelegate<Character> {

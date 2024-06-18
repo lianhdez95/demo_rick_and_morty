@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/datasource/local_characterdb_datasource_impl.dart';
 import '../../data/datasource/remote_characterdb_datasource_impl.dart';
-import '../../data/models/character_response_model.dart';
+import '../../domain/models/character_response_model.dart';
 import '../../data/repository/local_characterdb_repository_impl.dart';
 import '../../data/repository/remote_character_repository_impl.dart';
 import '../../domain/datasource/local_character_datasource.dart';
@@ -84,8 +85,14 @@ class CharacterListNotifier extends StateNotifier<List<Character>> {
   bool isLoading = false;
 
   Future<void> loadInitialData() async {
+    log(state.toString());
+    final allCharacters = await characterRepository.getAllCharacters();
+    state = allCharacters;
+    log(allCharacters.length.toString());
+    _currentPage = allCharacters.length ~/ 20 + 1;
     if (state.isEmpty) {
-      await getNextPage();
+      getNextPage();
+      return;
     }
   }
 
@@ -96,14 +103,11 @@ class CharacterListNotifier extends StateNotifier<List<Character>> {
   }
 
   Future<void> getNextPage() async {
-    if (isLoading) return;
-    isLoading = true;
     final newCharacters =
         await characterRepository.searchCharacters("", _currentPage);
     if (newCharacters.isNotEmpty) {
       _currentPage++;
       state = [...state, ...newCharacters];
     }
-    isLoading = false;
   }
 }

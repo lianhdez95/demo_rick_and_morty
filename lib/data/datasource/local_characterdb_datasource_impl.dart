@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:demo_rick_and_morty/data/models/character_response_model.dart';
+import 'package:demo_rick_and_morty/domain/models/character_response_model.dart';
 import 'package:demo_rick_and_morty/domain/datasource/local_character_datasource.dart';
 import 'package:demo_rick_and_morty/domain/datasource/remote_character_datasource.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,5 +39,22 @@ class LocalCharacterdbDatasourceImpl implements LocalCharacterDatasource{
     Map<String, dynamic> storedData = prefs.containsKey('characters') ? jsonDecode(prefs.getString('characters')!) : {};
     storedData[page.toString()] = characters.map((i) => i.toJson()).toList();
     prefs.setString('characters', jsonEncode(storedData));
+  }
+  
+  @override
+  Future<List<Character>> loadAllCharacters() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<Character> allCharacters = [];
+
+    if (prefs.containsKey('characters')) {
+      Map<String, dynamic> loadedData = jsonDecode(prefs.getString('characters')!);
+      loadedData.forEach((page, charactersData) {
+        List<Character> loadedCharacters = (charactersData as List)
+            .map((i) => Character.fromJson(i)).toList();
+        allCharacters.addAll(loadedCharacters);
+      });
+    }
+
+    return allCharacters;
   }
 }

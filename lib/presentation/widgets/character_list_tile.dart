@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../data/models/character_response_model.dart';
+import '../../domain/models/character_response_model.dart';
 
 class CharacterListTile extends StatelessWidget {
   final String? imageUrl;

@@ -1,4 +1,6 @@
 // ignore_for_file: unused_local_variable
+import 'dart:developer';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:demo_rick_and_morty/core/utils/parsers.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/character_list_tile.dart';
@@ -8,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/utils/chack_connection.dart';
-import '../../data/models/character_response_model.dart';
+import '../../domain/models/character_response_model.dart';
 import '../providers/character_providers.dart';
 import '../widgets/character_search_delegate.dart';
 
@@ -20,8 +22,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+
   Future<void>? _initialLoadFuture;
   bool isLoading = false;
+  bool isPageLoading = false;
   bool _showFab = false; // Define la variable isLoading
 
   @override
@@ -32,16 +36,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
       loadNextPage();
     }
   }
 
   Future loadNextPage() async {
     if (isLoading || !(await isConnected())) return;
-    isLoading = true;
-    setState(() {});
+    setState(() {
+      isLoading = true;
+      isPageLoading = true;
+    });
     try {
       await ref.read(characterListProvider.notifier).getNextPage();
       _scrollController.animateTo(
@@ -49,7 +55,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeOut,
       );
-      isLoading = false;
     } catch (e) {
       _scrollController.animateTo(0,
           duration: const Duration(seconds: 1), curve: Curves.easeOut);
@@ -60,7 +65,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
       }
+      log(e.toString());
     }
+    setState(() {
+      isLoading = false;
+      isPageLoading = false;
+    });
   }
 
   @override
@@ -71,8 +81,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadInitialData() async {
     try {
+      isLoading = true;
+      setState(() {});
+      log(isLoading.toString());
       _initialLoadFuture =
           ref.read(characterListProvider.notifier).loadInitialData();
+      isLoading = false;
+      setState(() {});
+      log(isLoading.toString());
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -128,7 +144,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 iconData: Icons.wifi_off);
           }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              characters.isEmpty) {
             return Scaffold(
               body: ZoomIn(
                 child: const Center(
@@ -146,10 +163,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   actions: [
                     IconButton(
                       onPressed: () async {
-                        final characterRepository = ref.read(remoteCharacterRepositoryProvider);
+                        final characterRepository =
+                            ref.read(remoteCharacterRepositoryProvider);
                         final selectedCharacter = await showSearch(
                           context: context,
-                          delegate: CharacterSearchDelegate(characterRepository),
+                          delegate:
+                              CharacterSearchDelegate(characterRepository),
                         );
 
                         if (selectedCharacter != null) {

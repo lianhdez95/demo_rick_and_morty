@@ -2,7 +2,7 @@
 import 'package:dio/dio.dart';
 
 import '../../domain/datasource/remote_character_datasource.dart';
-import '../models/character_response_model.dart';
+import '../../domain/models/character_response_model.dart';
 
 class CharacterDataSourceImpl implements CharacterDataSource {
   final dio = Dio(BaseOptions(
