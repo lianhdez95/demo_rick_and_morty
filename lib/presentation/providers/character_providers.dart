@@ -24,18 +24,18 @@ final remoteCharacterRepositoryProvider = Provider<CharacterRepository>((ref) {
 });
 
 //locales
-final localCharacterRepositoryProvider =
-    Provider<LocalCharacterRepository>((ref) {
-  return LocalCharacterdbRepositoryImpl(
-    localCharacterDatasource: ref.read(localCharacterDatasourceProvider),
-  );
-});
-final localCharacterDatasourceProvider =
-    Provider<LocalCharacterDatasource>((ref) {
-  return LocalCharacterdbDatasourceImpl(
-    remoteDataSource: ref.read(remoteCharacterDataSourceProvider),
-  );
-});
+// final localCharacterRepositoryProvider =
+//     Provider<LocalCharacterRepository>((ref) {
+//   return LocalCharacterdbRepositoryImpl(
+//     localCharacterDatasource: ref.read(localCharacterDatasourceProvider),
+//   );
+// });
+// final localCharacterDatasourceProvider =
+//     Provider<LocalCharacterDatasource>((ref) {
+//   return LocalCharacterdbDatasourceImpl(
+//     remoteDataSource: ref.read(remoteCharacterDataSourceProvider),
+//   );
+// });
 
 //filtrar personajes por nombre
 final characterSearchProvider = FutureProvider.autoDispose
@@ -74,25 +74,25 @@ final characterDetailProvider = FutureProvider.autoDispose
 final characterListProvider =
     StateNotifierProvider<CharacterListNotifier, List<Character>>((ref) {
   return CharacterListNotifier(
-    characterRepository: ref.read(localCharacterRepositoryProvider),
+    characterRepository: ref.read(remoteCharacterRepositoryProvider),
   );
 });
 
 class CharacterListNotifier extends StateNotifier<List<Character>> {
   CharacterListNotifier({required this.characterRepository}) : super([]);
-  final LocalCharacterRepository characterRepository;
+  final CharacterRepository characterRepository;
   int _currentPage = 1;
-  bool isLoading = false;
+  bool hasMorePages = true;
 
   Future<void> loadInitialData() async {
-    log(state.toString());
-    final allCharacters = await characterRepository.getAllCharacters();
-    state = allCharacters;
-    log(allCharacters.length.toString());
-    _currentPage = allCharacters.length ~/ 20 + 1;
-    if (state.isEmpty) {
-      getNextPage();
-      return;
+    if (hasMorePages) {
+      final characters = await characterRepository.getCharacters(page: _currentPage);
+      if (characters.isNotEmpty) {
+        state = characters;
+        _currentPage++;
+      } else {
+        hasMorePages = false;
+      }
     }
   }
 
@@ -103,11 +103,15 @@ class CharacterListNotifier extends StateNotifier<List<Character>> {
   }
 
   Future<void> getNextPage() async {
-    final newCharacters =
-        await characterRepository.searchCharacters("", _currentPage);
-    if (newCharacters.isNotEmpty) {
-      _currentPage++;
-      state = [...state, ...newCharacters];
+    if (hasMorePages) {
+      final newCharacters = await characterRepository.getCharacters(page: _currentPage);
+      if (newCharacters.isNotEmpty) {
+        _currentPage++;
+        log(_currentPage.toString());
+        state = List.from(state)..addAll(newCharacters);
+      } else {
+        hasMorePages = false;
+      }
     }
   }
 }

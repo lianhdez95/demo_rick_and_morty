@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:animate_do/animate_do.dart';
 import 'package:demo_rick_and_morty/core/utils/parsers.dart';
+import 'package:demo_rick_and_morty/presentation/providers/old_character_providers.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/character_list_tile.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/error_screen.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/loading.dart';
@@ -11,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/utils/chack_connection.dart';
 import '../../domain/models/character_response_model.dart';
-import '../providers/character_providers.dart';
 import '../widgets/character_search_delegate.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -164,7 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     IconButton(
                       onPressed: () async {
                         final characterRepository =
-                            ref.read(remoteCharacterRepositoryProvider);
+                            ref.read(characterRepositoryProvider);
                         final selectedCharacter = await showSearch(
                           context: context,
                           delegate:
