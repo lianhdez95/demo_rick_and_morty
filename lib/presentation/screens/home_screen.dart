@@ -22,8 +22,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+
   Future<void>? _initialLoadFuture;
   bool isLoading = false;
+  bool isPageLoading = false;
   bool _showFab = false; // Define la variable isLoading
 
   @override
@@ -42,16 +44,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future loadNextPage() async {
     if (isLoading || !(await isConnected())) return;
-    isLoading = true;
-    setState(() {});
+    setState(() {
+      isLoading = true;
+      isPageLoading = true;
+    });
     try {
+      await Future.delayed(const Duration(seconds: 2));
       await ref.read(characterListProvider.notifier).getNextPage();
       _scrollController.animateTo(
         _scrollController.offset + 100,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeOut,
       );
-      isLoading = false;
     } catch (e) {
       _scrollController.animateTo(0,
           duration: const Duration(seconds: 1), curve: Curves.easeOut);
@@ -62,7 +66,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
       }
+      log(e.toString());
     }
+    setState(() {
+      isLoading = false;
+      isPageLoading = false;
+    });
   }
 
   @override
@@ -136,7 +145,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 iconData: Icons.wifi_off);
           }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              characters.isEmpty) {
             return Scaffold(
               body: ZoomIn(
                 child: const Center(
@@ -154,10 +164,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   actions: [
                     IconButton(
                       onPressed: () async {
-                        final characterRepository = ref.read(remoteCharacterRepositoryProvider);
+                        final characterRepository =
+                            ref.read(remoteCharacterRepositoryProvider);
                         final selectedCharacter = await showSearch(
                           context: context,
-                          delegate: CharacterSearchDelegate(characterRepository),
+                          delegate:
+                              CharacterSearchDelegate(characterRepository),
                         );
 
                         if (selectedCharacter != null) {
