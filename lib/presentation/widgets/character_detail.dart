@@ -57,6 +57,7 @@ class CharacterDetail extends StatelessWidget {
               child: Column(
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Name: ',
@@ -66,11 +67,15 @@ class CharacterDetail extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             color: colors.primary),
                       ),
-                      Text(
-                        character.name!,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                      SizedBox(
+                        width: width*0.6,
+                        child: Text(
+                          character.name!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                        ),
                       ),
                     ],
                   ),
@@ -78,6 +83,7 @@ class CharacterDetail extends StatelessWidget {
                     height: height * 0.01,
                   ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Status: ',
@@ -87,12 +93,15 @@ class CharacterDetail extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: colors.primary),
                       ),
-                      Text(
-                        parseStatus(character.status!),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style:
-                            TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                      SizedBox(
+                        width: width*0.6,
+                        child: Text(
+                          parseStatus(character.status!),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          style:
+                              TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                        ),
                       ),
                     ],
                   ),
@@ -100,6 +109,7 @@ class CharacterDetail extends StatelessWidget {
                     height: height * 0.01,
                   ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Species: ',
@@ -109,11 +119,14 @@ class CharacterDetail extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: colors.primary),
                       ),
-                      Text(
-                        parseSpecies(character.species!),
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                      SizedBox(
+                        width: width*0.6,
+                        child: Text(
+                          parseSpecies(character.species!),
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                        ),
                       ),
                     ],
                   ),
@@ -121,6 +134,7 @@ class CharacterDetail extends StatelessWidget {
                     height: height * 0.01,
                   ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Gender: ',
@@ -130,11 +144,14 @@ class CharacterDetail extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: colors.primary),
                       ),
-                      Text(
-                        parseGender(character.gender!),
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                      SizedBox(
+                        width: width*0.6,
+                        child: Text(
+                          parseGender(character.gender!),
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(fontSize: textTheme.titleLarge!.fontSize),
+                        ),
                       ),
                     ],
                   ),
@@ -142,6 +159,7 @@ class CharacterDetail extends StatelessWidget {
                     height: height * 0.01,
                   ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Origin: ',
@@ -167,6 +185,7 @@ class CharacterDetail extends StatelessWidget {
                     height: height * 0.01,
                   ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Location: ',

@@ -35,4 +35,9 @@ class CharacterDataSourceImpl implements CharacterDataSource {
             .map((e) => Character.fromJson(e))
             .toList());
   }
+
+  @override
+  Future<int> getAllPages() {
+    return dio.get('/character').then((value) => value.data['info']['pages']);
+  }
 }

@@ -1,60 +1,103 @@
-import 'dart:convert';
-import 'package:demo_rick_and_morty/domain/models/character_response_model.dart';
-import 'package:demo_rick_and_morty/domain/datasource/local_character_datasource.dart';
-import 'package:demo_rick_and_morty/domain/datasource/remote_character_datasource.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import '../../domain/datasource/local_character_datasource.dart';
+import '../../domain/models/character_response_model.dart';
 
-class LocalCharacterdbDatasourceImpl implements LocalCharacterDatasource{
-  final CharacterDataSource remoteDataSource;
+class LocalCharacterDbDatasourceImpl implements LocalCharacterDatasource {
+  Database? _database;
 
-  LocalCharacterdbDatasourceImpl({required this.remoteDataSource});
-
-  @override
-  Future<List<Character>> searchCharacters(String query, int page) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey('characters')) {
-      Map<String, dynamic> loadedData = jsonDecode(prefs.getString('characters')!);
-      if (loadedData.containsKey(page.toString())) {
-        List<Character> loadedCharacters = (loadedData[page.toString()] as List)
-            .map((i) => Character.fromJson(i)).toList();
-        return loadedCharacters.where((character) => character.name!.contains(query)).toList();
-      } else {
-        // Utiliza el datasource remoto para hacer la solicitud a la API
-        List<Character> characters = await remoteDataSource.getCharacters(page: page);
-        // Almacena los datos y luego devuélvelos
-        storeCharacters(page, characters);
-        return characters;
-      }
-    } else {
-      // Si no hay datos almacenados, utiliza el datasource remoto para hacer la solicitud a la API
-      List<Character> characters = await remoteDataSource.getCharacters(page: page);
-      // Almacena los datos y luego devuélvelos
-      storeCharacters(page, characters);
-      return characters;
-    }
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDb();
+    return _database!;
   }
 
-  Future<void> storeCharacters(int page, List<Character> characters) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> storedData = prefs.containsKey('characters') ? jsonDecode(prefs.getString('characters')!) : {};
-    storedData[page.toString()] = characters.map((i) => i.toJson()).toList();
-    prefs.setString('characters', jsonEncode(storedData));
+  Future<Database> _initDb() async {
+    String path = join(await getDatabasesPath(), 'character_database.db');
+    return openDatabase(
+      path,
+      onCreate: (db, version) {
+        return db.execute(
+          "CREATE TABLE characters(id INTEGER PRIMARY KEY, name TEXT, status TEXT, species TEXT, type TEXT, gender TEXT, origin TEXT, location TEXT, image TEXT, episode TEXT, url TEXT, created TEXT)",
+        );
+      },
+      version: 1,
+    );
+  }
+
+  @override
+  Future<void> saveCharacters(List<Character> characters) async {
+    final db = await database;
+    Batch batch = db.batch();
+    for (var character in characters) {
+      batch.insert('characters', {
+        'id': character.id,
+        'name': character.name,
+        'status': statusValues.reverse[character.status],
+        'species': speciesValues.reverse[character.species],
+        'type': character.type,
+        'gender': genderValues.reverse[character.gender],
+        'origin': character.origin?.name,
+        'location': character.location?.name,
+        'image': character.image,
+        'episode': character.episode?.join(', '),
+        'url': character.url,
+        'created': character.created?.toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  @override
+  Future<List<Character>> getAllCharacters() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('characters');
+    return List.generate(maps.length, (i) {
+      var map = maps[i];
+      return Character(
+        id: map['id'],
+        name: map['name'],
+        status: statusValues.map[map['status']] ?? Status.UNKNOWN,
+        species: speciesValues.map[map['species']] ?? Species.UNKNOWN,
+        type: map['type'],
+        gender: genderValues.map[map['gender']] ?? Gender.UNKNOWN,
+        origin: Location(name: map['origin'], url: null),
+        location: Location(name: map['location'], url: null),
+        image: map['image'],
+        episode: map['episode']?.split(', '),
+        url: map['url'],
+        created: map['created'] == null ? null : DateTime.parse(map['created']),
+      );
+    });
   }
   
   @override
-  Future<List<Character>> loadAllCharacters() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<Character> allCharacters = [];
-
-    if (prefs.containsKey('characters')) {
-      Map<String, dynamic> loadedData = jsonDecode(prefs.getString('characters')!);
-      loadedData.forEach((page, charactersData) {
-        List<Character> loadedCharacters = (charactersData as List)
-            .map((i) => Character.fromJson(i)).toList();
-        allCharacters.addAll(loadedCharacters);
-      });
+  Future<Character> getCharacter(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'characters',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  
+    if (maps.isNotEmpty) {
+      var map = maps.first;
+      return Character(
+        id: map['id'],
+        name: map['name'],
+        status: statusValues.map[map['status']] ?? Status.UNKNOWN,
+        species: speciesValues.map[map['species']] ?? Species.UNKNOWN,
+        type: map['type'],
+        gender: genderValues.map[map['gender']] ?? Gender.UNKNOWN,
+        origin: Location(name: map['origin'], url: null),
+        location: Location(name: map['location'], url: null),
+        image: map['image'],
+        episode: map['episode']?.split(', '),
+        url: map['url'],
+        created: map['created'] == null ? null : DateTime.parse(map['created']),
+      );
+    } else {
+      throw Exception('Character with id $id not found');
     }
-
-    return allCharacters;
   }
 }

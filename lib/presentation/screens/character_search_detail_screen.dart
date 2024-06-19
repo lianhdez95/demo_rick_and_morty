@@ -6,13 +6,13 @@ import 'package:demo_rick_and_morty/presentation/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CharacterDetailScreen extends ConsumerWidget {
+class CharacterSearchDetailScreen extends ConsumerWidget {
   final String characterId;
-  const CharacterDetailScreen({super.key, required this.characterId});
+  const CharacterSearchDetailScreen({super.key, required this.characterId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final getCharacter = ref.watch(characterLocalDetailProvider(characterId));
+    final getCharacter = ref.watch(characterDetailProvider(characterId));
 
     return getCharacter.when(
         data: (character) {

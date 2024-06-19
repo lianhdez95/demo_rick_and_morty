@@ -1,5 +1,6 @@
  
- import 'package:flex_color_scheme/flex_color_scheme.dart';
+ import 'package:demo_rick_and_morty/core/utils/chack_connection.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 final lightMode = FlexThemeData.light(
@@ -17,7 +18,7 @@ final lightMode = FlexThemeData.light(
   visualDensity: FlexColorScheme.comfortablePlatformDensity,
   useMaterial3: true,
   swapLegacyOnMaterial3: true,
-  fontFamily: GoogleFonts.exo2().fontFamily,
+  fontFamily: 'Exo2',
   
 );
 
@@ -35,5 +36,5 @@ final lightMode = FlexThemeData.light(
   visualDensity: FlexColorScheme.comfortablePlatformDensity,
   useMaterial3: true,
   swapLegacyOnMaterial3: true,
-  fontFamily: GoogleFonts.exo2().fontFamily,
+  fontFamily: 'Exo2',
 );
