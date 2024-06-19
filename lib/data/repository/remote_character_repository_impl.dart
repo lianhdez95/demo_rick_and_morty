@@ -9,7 +9,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
 
   @override
   Future<List<Character>> getCharacters({required int page}) {
-    return dataSource.getCharacters(page: 1);
+    return dataSource.getCharacters(page: page);
   }
   
    @override
@@ -20,5 +20,10 @@ class CharacterRepositoryImpl implements CharacterRepository {
   @override
   Future<List<Character>> filterCharactersByName(String name) {
     return dataSource.filterCharactersByName(name);
+  }
+
+  @override
+  Future<int> getAllPages() {
+    return dataSource.getAllPages();
   }
 }

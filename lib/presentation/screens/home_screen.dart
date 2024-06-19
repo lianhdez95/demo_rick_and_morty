@@ -2,8 +2,9 @@
 import 'dart:developer';
 
 import 'package:animate_do/animate_do.dart';
+import 'package:demo_rick_and_morty/core/errors/no_more_pages_exception.dart';
 import 'package:demo_rick_and_morty/core/utils/parsers.dart';
-import 'package:demo_rick_and_morty/presentation/providers/old_character_providers.dart';
+import 'package:demo_rick_and_morty/presentation/providers/character_providers.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/character_list_tile.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/error_screen.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/loading.dart';
@@ -50,22 +51,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
     try {
       await ref.read(characterListProvider.notifier).getNextPage();
-      _scrollController.animateTo(
-        _scrollController.offset + 100,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOut,
-      );
     } catch (e) {
-      _scrollController.animateTo(0,
-          duration: const Duration(seconds: 1), curve: Curves.easeOut);
-      if (mounted) {
+      if (e is NoMorePagesException) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No hay conexión a internet'),
+          SnackBar(
+            content: Text('No hay más personajes para mostrar'),
+          ),
+        );
+      } else {
+        log(e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al obtener datos: Conexion fallida'),
           ),
         );
       }
-      log(e.toString());
     }
     setState(() {
       isLoading = false;
@@ -173,7 +173,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                         if (selectedCharacter != null) {
                           // Navega a la pantalla de detalles del personaje seleccionado
-                          context.push('/character/${selectedCharacter.id}');
+                          context.push(
+                              '/character_search/${selectedCharacter.id}');
                         }
                       },
                       icon: Icon(

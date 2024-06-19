@@ -1,6 +1,7 @@
-// import '../models/character_response_model.dart';
+import '../models/character_response_model.dart';
 
-// abstract class LocalCharacterDatasource {
-//   Future<List<Character>> searchCharacters(String query, int page);
-//   Future<List<Character>> loadAllCharacters();
-// }
+abstract class LocalCharacterDatasource{
+  Future<void> saveCharacters(List<Character> characters);
+  Future<List<Character>> getAllCharacters();
+  Future<Character> getCharacter(int id);
+}

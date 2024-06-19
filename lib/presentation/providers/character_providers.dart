@@ -1,67 +1,61 @@
-import 'dart:async';
 import 'dart:developer';
 
+import 'package:demo_rick_and_morty/core/errors/no_more_pages_exception.dart';
+import 'package:demo_rick_and_morty/data/datasource/local_characterdb_datasource_impl.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/datasource/local_characterdb_datasource_impl.dart';
 import '../../data/datasource/remote_characterdb_datasource_impl.dart';
-import '../../domain/models/character_response_model.dart';
 import '../../data/repository/local_characterdb_repository_impl.dart';
 import '../../data/repository/remote_character_repository_impl.dart';
 import '../../domain/datasource/local_character_datasource.dart';
 import '../../domain/datasource/remote_character_datasource.dart';
+import '../../domain/models/character_response_model.dart';
 import '../../domain/repository/local_character_repository.dart';
 import '../../domain/repository/remote_character_repository.dart';
 
-//remotos
-final remoteCharacterDataSourceProvider = Provider<CharacterDataSource>((ref) {
+final characterDataSourceProvider = Provider<CharacterDataSource>((ref) {
   return CharacterDataSourceImpl();
 });
 
-final remoteCharacterRepositoryProvider = Provider<CharacterRepository>((ref) {
+final characterRepositoryProvider = Provider<CharacterRepository>((ref) {
   return CharacterRepositoryImpl(
-      dataSource: ref.read(remoteCharacterDataSourceProvider));
+      dataSource: ref.read(characterDataSourceProvider));
 });
 
-//locales
-// final localCharacterRepositoryProvider =
-//     Provider<LocalCharacterRepository>((ref) {
-//   return LocalCharacterdbRepositoryImpl(
-//     localCharacterDatasource: ref.read(localCharacterDatasourceProvider),
-//   );
-// });
-// final localCharacterDatasourceProvider =
-//     Provider<LocalCharacterDatasource>((ref) {
-//   return LocalCharacterdbDatasourceImpl(
-//     remoteDataSource: ref.read(remoteCharacterDataSourceProvider),
-//   );
-// });
+final totalPagesProvider = FutureProvider<int>((ref) async {
+  final characterRepo = ref.watch(characterRepositoryProvider);
+  return await characterRepo.getAllPages();
+});
 
-//filtrar personajes por nombre
-final characterSearchProvider = FutureProvider.autoDispose
-    .family<List<Character>, String>((ref, name) async {
-  final characterRepo = ref.watch(remoteCharacterRepositoryProvider);
-  try {
-    return await characterRepo
-        .filterCharactersByName(name)
-        .timeout(const Duration(seconds: 30));
-  } on TimeoutException catch (_) {
-    throw Exception('La carga de datos excedió el tiempo límite');
+final localCharacterDatasourceProvider =
+    Provider<LocalCharacterDatasource>((ref) {
+  return LocalCharacterDbDatasourceImpl();
+});
+
+final localCharacterRepositoryProvider =
+    Provider<LocalCharacterRepository>((ref) {
+  return LocalCharacterdbRepositoryImpl(
+      localCharacterDatasource: ref.read(localCharacterDatasourceProvider));
+});
+
+//remoto, para las búsquedas
+final characterDetailProvider = FutureProvider.autoDispose
+    .family<Character, String>((ref, characterId) async {
+  final characterRepo = ref.watch(characterRepositoryProvider);
+  if (int.tryParse(characterId) != null) {
+    return await characterRepo.getCharacter(int.parse(characterId));
+  } else {
+    throw Exception('Invalid character ID');
   }
 });
 
-//un solo personaje
-final characterDetailProvider = FutureProvider.autoDispose
+//local, para los detalles
+final characterLocalDetailProvider = FutureProvider.autoDispose
     .family<Character, String>((ref, characterId) async {
-  final characterRepo = ref.watch(remoteCharacterRepositoryProvider);
+  final localCharacterRepo = ref.watch(localCharacterRepositoryProvider);
   if (int.tryParse(characterId) != null) {
-    try {
-      return await characterRepo
-          .getCharacter(int.parse(characterId))
-          .timeout(const Duration(seconds: 30));
-    } on TimeoutException catch (_) {
-      throw Exception('La carga de datos excedió el tiempo límite');
-    }
+    return await localCharacterRepo.getCharacter(int.parse(characterId));
   } else {
     throw Exception('Invalid character ID');
   }
@@ -72,46 +66,81 @@ final characterDetailProvider = FutureProvider.autoDispose
 // });
 
 final characterListProvider =
-    StateNotifierProvider<CharacterListNotifier, List<Character>>((ref) {
+    StateNotifierProvider.autoDispose<CharacterListNotifier, List<Character>>(
+        (ref) {
+  final remoteCharacterRepository = ref.watch(characterRepositoryProvider);
+  final localCharacterRepository = ref.watch(localCharacterRepositoryProvider);
+  final totalPages = ref.watch(totalPagesProvider.future);
+
   return CharacterListNotifier(
-    characterRepository: ref.read(remoteCharacterRepositoryProvider),
-  );
+      remoteCharacterRepository, localCharacterRepository, totalPages);
 });
 
 class CharacterListNotifier extends StateNotifier<List<Character>> {
-  CharacterListNotifier({required this.characterRepository}) : super([]);
-  final CharacterRepository characterRepository;
-  int _currentPage = 1;
-  bool hasMorePages = true;
+  final CharacterRepository _remoteCharacterRepository;
+  final LocalCharacterRepository _localCharacterRepository;
+  final Future<int> _totalPages;
+  int _currentPage = 0;
+  int _residual = 0;
+  bool isLoading = false;
+
+
+  CharacterListNotifier(this._remoteCharacterRepository,
+      this._localCharacterRepository, this._totalPages)
+      : super([]);
 
   Future<void> loadInitialData() async {
-    if (hasMorePages) {
-      final characters = await characterRepository.getCharacters(page: _currentPage);
-      if (characters.isNotEmpty) {
-        state = characters;
-        _currentPage++;
+    if (state.isEmpty) {
+      // Primero intentamos cargar los datos de la base de datos local
+      List<Character> characters =
+          await _localCharacterRepository.getAllCharacters();
+
+      //se incrementa el paginado en dependencia de cuántos objetos hay en la base local
+      _currentPage = characters.length ~/ 20;
+      _residual = characters.length % 20;
+
+
+      log('Se han cargado $_currentPage páginas');
+      log('Hay ${characters.length} personajes en la local' );
+      log('El residual es $_residual');
+
+      if (characters.isEmpty) {
+        // Si la base de datos local está vacía, cargamos los datos de la base de datos remota
+        await getNextPage();
       } else {
-        hasMorePages = false;
+        // Si la base de datos local tiene datos, los usamos
+        state = characters;
       }
     }
   }
 
   Future<void> resetAndLoadInitialData() async {
-    _currentPage = 1;
+    _currentPage = 0;
     state = [];
     await loadInitialData();
   }
 
   Future<void> getNextPage() async {
-    if (hasMorePages) {
-      final newCharacters = await characterRepository.getCharacters(page: _currentPage);
+
+    isLoading = true;
+    // Cargamos los datos de la base de datos remota
+
+    _currentPage++;
+    log('Cargando página $_currentPage');
+    if (_currentPage <= await _totalPages && _residual == 0) {
+      final newCharacters =
+          await _remoteCharacterRepository.getCharacters(page: _currentPage);
       if (newCharacters.isNotEmpty) {
-        _currentPage++;
-        log(_currentPage.toString());
-        state = List.from(state)..addAll(newCharacters);
-      } else {
-        hasMorePages = false;
+        // Guardamos los nuevos personajes en la base de datos local
+        await _localCharacterRepository.saveCharacters(newCharacters);
+        // Actualizamos el estado con los nuevos personajes
+        state = [...state, ...newCharacters];
       }
+    } else{
+      isLoading = false;
+      throw NoMorePagesException();
     }
+
+    isLoading = false;
   }
 }
