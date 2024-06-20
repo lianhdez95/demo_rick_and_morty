@@ -23,7 +23,7 @@ final characterRepositoryProvider = Provider<CharacterRepository>((ref) {
       dataSource: ref.read(characterDataSourceProvider));
 });
 
-final totalPagesProvider = FutureProvider<int>((ref) async {
+final totalPagesProvider = FutureProvider.autoDispose<int>((ref) async {
   final characterRepo = ref.watch(characterRepositoryProvider);
   return await characterRepo.getAllPages();
 });

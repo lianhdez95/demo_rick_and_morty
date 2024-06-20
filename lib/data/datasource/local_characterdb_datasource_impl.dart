@@ -100,4 +100,32 @@ class LocalCharacterDbDatasourceImpl implements LocalCharacterDatasource {
       throw Exception('Character with id $id not found');
     }
   }
+  
+  @override
+  Future<List<Character>> filterCharactersByName(String name) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'characters',
+      where: 'name LIKE ?',
+      whereArgs: ['%$name%'],
+    );
+
+    return List.generate(maps.length, (i) {
+      var map = maps[i];
+      return Character(
+        id: map['id'],
+        name: map['name'],
+        status: statusValues.map[map['status']] ?? Status.UNKNOWN,
+        species: speciesValues.map[map['species']] ?? Species.UNKNOWN,
+        type: map['type'],
+        gender: genderValues.map[map['gender']] ?? Gender.UNKNOWN,
+        origin: Location(name: map['origin'], url: null),
+        location: Location(name: map['location'], url: null),
+        image: map['image'],
+        episode: map['episode']?.split(', '),
+        url: map['url'],
+        created: map['created'] == null ? null : DateTime.parse(map['created']),
+      );
+    });
+  }
 }
