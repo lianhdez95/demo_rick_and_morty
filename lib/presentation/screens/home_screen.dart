@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:animate_do/animate_do.dart';
 import 'package:demo_rick_and_morty/core/errors/no_more_pages_exception.dart';
 import 'package:demo_rick_and_morty/core/utils/parsers.dart';
+import 'package:demo_rick_and_morty/domain/repository/local_character_repository.dart';
 import 'package:demo_rick_and_morty/presentation/providers/character_providers.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/character_list_tile.dart';
 import 'package:demo_rick_and_morty/presentation/widgets/error_screen.dart';
@@ -11,7 +12,7 @@ import 'package:demo_rick_and_morty/presentation/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/utils/chack_connection.dart';
+import '../../core/utils/check_connection.dart';
 import '../../domain/models/character_response_model.dart';
 import '../widgets/character_search_delegate.dart';
 
@@ -137,6 +138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         future: _initialLoadFuture,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            log(snapshot.error.toString());
             return const ErrorScreen(
                 text: 'Error al obtener datos\nRevise su conexión a internet',
                 redirectRoute: '/',
@@ -163,18 +165,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   actions: [
                     IconButton(
                       onPressed: () async {
-                        final characterRepository =
+                        final remoteCharacterRepository =
                             ref.read(characterRepositoryProvider);
+                        final localCharacterRepository =
+                            ref.read(localCharacterRepositoryProvider);
                         final selectedCharacter = await showSearch(
                           context: context,
-                          delegate:
-                              CharacterSearchDelegate(characterRepository),
+                          delegate: CharacterSearchDelegate(remoteCharacterRepository, localCharacterRepository),
                         );
 
                         if (selectedCharacter != null) {
                           // Navega a la pantalla de detalles del personaje seleccionado
-                          context.push(
-                              '/character_search/${selectedCharacter.id}');
+                          context.push('/character/${selectedCharacter.id}');
                         }
                       },
                       icon: Icon(

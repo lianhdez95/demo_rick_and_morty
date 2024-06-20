@@ -23,4 +23,11 @@ class LocalCharacterdbRepositoryImpl implements LocalCharacterRepository {
   Future<Character> getCharacter(int id) {
     return localCharacterDatasource.getCharacter(id);
   }
+  
+  @override
+  Future<List<Character>> filterCharactersByName(String name) {
+    return localCharacterDatasource.filterCharactersByName(name);
+  }
+  
+  
 }
